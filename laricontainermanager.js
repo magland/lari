@@ -97,13 +97,15 @@ function Container() {
 	}
 
 	function wait_for_active_poll_from_container(msec,closer,callback) {
-		wait_for_active_poll_from_container_2(new Date(),msec,closer,callback);
 		var need_to_cancel=false;
 		closer.on('close',function() {
 			console.log('Request closed while waiting for active poll from container.');
 			need_to_cancel=true;
 		});
+
+		wait_for_active_poll_from_container_2(new Date(),msec,closer,callback);
 		function wait_for_active_poll_from_container_2(start_timestamp,msec,closer,callback) {
+			console.log(':::::::::: wait_for_active_poll_from_container_2 ::::::::::');
 			var first_poll_id=null;
 			for (var pid in m_active_polls_from_container) {
 				first_poll_id=pid;

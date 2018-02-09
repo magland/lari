@@ -163,6 +163,7 @@ if (process.env.PARENT_LARI_URL) {
 	container_client.setRequestHandler(function(cmd,query,callback) {
 		console.log ('Handling api request in container: '+cmd);
 		handle_api_2(cmd,query,create_closer(null),function(resp) {
+			console.log(resp);
 			callback(resp);
 		});
 	});
