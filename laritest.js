@@ -2,6 +2,7 @@
 
 var LariClient=require(__dirname+'/lariclient.js').LariClient;
 var client=new LariClient();
+client.setLariServerUrl('http://localhost:6057');
 client.setContainerId('child');
 
 //test1();
