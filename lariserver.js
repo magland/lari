@@ -276,6 +276,8 @@ function handle_api_2(cmd,query,closer,callback) {
 				return;
 			}
 			console.log ('Output of process: ['+stdout.length+' bytes]');
+			if (stdout[0]=='p')
+				stdout=stdout.split('\n').slice(1).join('\n');
 			var obj=try_parse_json(stdout);
 			if (!obj) {
 				console.error('ERROR PARSING for: '+exe);
