@@ -16,7 +16,7 @@ function LariClient() {
 	this.cancelProcess=function(job_id,opts,callback) {cancelProcess(job_id,opts,callback);};
 	this.getFileContent=function(prv,opts,callback) {getFileContent(prv,opts,callback);};
 
-	var m_lari_server_url='http://localhost:6057';
+	var m_lari_server_url='https://lari1.herokuapp.com';
 	var m_container_id='';
 
 	function spec(query,opts,callback) {

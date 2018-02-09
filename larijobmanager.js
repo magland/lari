@@ -49,6 +49,10 @@ function LariProcessorJob() {
 
 	var request_fname,response_fname,mpreq;
 	function start(processor_name,inputs,outputs,parameters,resources,opts,callback) {
+		if (!process.env.DATA_DIRECTORY) {
+			callback('Environment variable not set: DATA_DIRECTORY');
+			return;
+		}
 		request_fname=make_tmp_json_file(process.env.DATA_DIRECTORY);
 		response_fname=make_tmp_json_file(process.env.DATA_DIRECTORY);
 		mpreq={
