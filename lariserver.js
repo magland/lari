@@ -2,7 +2,9 @@
 
 // Set the following environment variables:
 //   CONTAINER_ID (required)
-//   DATA_DIRECTORY (defaults to lari folder within temporary directory from mlconfig)
+
+// If you want this to be a processing server (must have mountainlab installed)
+//   DATA_DIRECTORY (use * for default)
 
 // If you want to listen
 //   LISTEN_PORT (e.g., 6057)
@@ -21,11 +23,14 @@ if (!process.env.CONTAINER_ID) {
 	return;
 }
 
-if (!process.env.DATA_DIRECTORY) {
-	process.env.DATA_DIRECTORY=get_default_data_directory();
+if (process.env.DATA_DIRECTORY) {
+	if (process.env.DATA_DIRECTORY=='*') {
+		process.env.DATA_DIRECTORY=get_default_data_directory();
+	}
 	mkdir_if_needed(process.env.DATA_DIRECTORY);
-	console.warn('Environment variable not set: DATA_DIRECTORY. Using '+process.env.DATA_DIRECTORY);
+	console.log('Using data directory: '+process.env.DATA_DIRECTORY);
 }
+
 
 var LariJobManager=require(__dirname+'/larijobmanager.js').LariJobManager;
 var LariProcessorJob=require(__dirname+'/larijobmanager.js').LariProcessorJob;
@@ -272,6 +277,10 @@ function handle_api_2(cmd,query,closer,callback) {
 		});
 	}
 	function get_file_content(query,closer,callback) {
+		if (!process.env.DATA_DIRECTORY) {
+			callback('Environment variable not set: DATA_DIRECTORY');
+			return;
+		}
 		if ((!query.checksum)||(!('size' in query))||(!('fcs' in query))) {
 			callback("Invalid query.");	
 			return;
