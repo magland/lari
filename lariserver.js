@@ -91,6 +91,9 @@ if (process.env.LISTEN_PORT) {
 		else if (path=='/api/cancel-process') {
 			handle_api('cancel-process',req,resp);
 		}
+		else if (path=='/api/find-file') {
+			handle_api('find-file',req,resp);
+		}
 		else if (path=='/api/get-file-content') {
 			handle_api('get-file-content',req,resp);
 		}
@@ -230,6 +233,16 @@ function handle_api_2(cmd,query,closer,callback) {
 			}
 		});
 	}
+	else if (cmd=='find-file') {
+		find_file(query,closer,function(err,resp) {
+			if (err) {
+				callback({success:false,error:err});
+			}
+			else {
+				callback(resp);
+			}
+		});
+	}
 	else if (cmd=='get-file-content') {
 		get_file_content(query,closer,function(err,resp) {
 			if (err) {
@@ -274,6 +287,33 @@ function handle_api_2(cmd,query,closer,callback) {
 		});
 		closer.on('close',function() {
 			console.log ('Canceling spec process.');
+			pp.stdout.pause();
+			pp.kill('SIGTERM');
+		});
+	}
+	function find_file(query,closer,callback) {
+		if (!process.env.DATA_DIRECTORY) {
+			callback('Environment variable not set: DATA_DIRECTORY');
+			return;
+		}
+		if ((!query.checksum)||(!('size' in query))||(!('fcs' in query))) {
+			callback("Invalid query.");	
+			return;
+		}
+		var pp=execute_and_read_stdout('prv-locate',['--search_path='+process.env.DATA_DIRECTORY,'--checksum='+query.checksum,'--size='+query.size,'--fcs='+(query.fcs||'')],{},function(err,path) {
+			path=path.trim();
+			if (err) {
+				callback('Error in prv-locate: '+err);
+				return;
+			}
+			if (!require('fs').existsSync(path)) {
+				callback(null,{success:true,found:false});
+				return;
+			}
+			callback(null,{success:true,found:true});
+		});
+		closer.on('close',function() {
+			console.log ('Canceling prv-locate process.');
 			pp.stdout.pause();
 			pp.kill('SIGTERM');
 		});

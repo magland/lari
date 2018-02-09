@@ -10,17 +10,28 @@ function LariClient() {
 	var that=this;
 	this.setLariServerUrl=function(url) {m_lari_server_url=url;};
 	this.setContainerId=function(id) {m_container_id=id;};
-	this.spec=function(query,opts,callback) {spec(query,opts,callback);};
+	this.getSpec=function(query,opts,callback) {getSpec(query,opts,callback);};
 	this.queueProcess=function(query,opts,callback) {queueProcess(query,opts,callback);};
 	this.probeProcess=function(job_id,opts,callback) {probeProcess(job_id,opts,callback);};
 	this.cancelProcess=function(job_id,opts,callback) {cancelProcess(job_id,opts,callback);};
+	this.findFile=function(prv,opts,callback) {findFile(prv,opts,callback);};
 	this.getFileContent=function(prv,opts,callback) {getFileContent(prv,opts,callback);};
 
 	var m_lari_server_url='https://lari1.herokuapp.com';
 	var m_container_id='';
 
-	function spec(query,opts,callback) {
-		api_call('spec',query,opts,callback);
+	function getSpec(query,opts,callback) {
+		api_call('spec',query,opts,function(err,resp) {
+			if (err) {
+				callback(err);
+				return;
+			}
+			if (!resp.success) {
+				callback(resp.error);
+				return;
+			}
+			callback(null,resp.spec);
+		});
 	}
 	function queueProcess(query,opts,callback) {
 		api_call('queue-process',query,opts,callback);
@@ -30,6 +41,16 @@ function LariClient() {
 	}
 	function cancelProcess(job_id,opts,callback) {
 		api_call('cancel-process',{job_id:job_id},opts,callback);
+	}
+
+	function findFile(prv,opts,callback) {
+		api_call('find-file',{checksum:prv.original_checksum,fcs:prv.original_fcs,size:prv.original_size},{},function(err,resp) {
+			if (err) {
+				callback(err);
+				return;
+			}
+			callback(null,resp);
+		});
 	}
 
 	function getFileContent(prv,opts,callback) {
