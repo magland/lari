@@ -112,6 +112,7 @@ function Container() {
 				break;
 			}
 			if (first_poll_id) {
+				console.log('found poll!');
 				var poll=m_active_polls_from_container[first_poll_id];
 				delete m_active_polls_from_container[first_poll_id];
 				callback(poll);
@@ -119,13 +120,17 @@ function Container() {
 			else {
 				var elapsed=(new Date())-start_timestamp;
 				if (elapsed>msec) {
+					console.log('elapsed exceeds: '+elapsed+' > '+msec);
 					callback(null);
 					return;
 				}
 				if (need_to_cancel) {
+					console.log('need to cancel');
 					return;
 				}
+				console.log('aaa');
 				setTimeout(function() {
+					console.log('bbb');
 					wait_for_active_poll_from_container_2(start_timestamp,msec,closer,callback);
 				},100);
 			}
