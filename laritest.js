@@ -21,7 +21,7 @@ function test1(callback) {
 			console.error('Error: '+err);
 			return;
 		}
-		console.log(JSON.stringify(spec,null,4));
+		console.log (JSON.stringify(spec,null,4));
 		if (callback) callback();
 	});
 }

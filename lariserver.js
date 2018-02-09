@@ -28,7 +28,7 @@ if (process.env.DATA_DIRECTORY) {
 		process.env.DATA_DIRECTORY=get_default_data_directory();
 	}
 	mkdir_if_needed(process.env.DATA_DIRECTORY);
-	console.log('Using data directory: '+process.env.DATA_DIRECTORY);
+	console.log ('Using data directory: '+process.env.DATA_DIRECTORY);
 }
 
 var LariJobManager=require(__dirname+'/larijobmanager.js').LariJobManager;
@@ -156,14 +156,13 @@ if (process.env.LISTEN_PORT) {
 }
 
 if (process.env.PARENT_LARI_URL) {
-	console.log('Connecting to parent: '+process.env.PARENT_LARI_URL);
+	console.log ('Connecting to parent: '+process.env.PARENT_LARI_URL);
 	var container_client=new ContainerClient();
 	container_client.setLariUrl(process.env.PARENT_LARI_URL);
 	container_client.setContainerId(process.env.CONTAINER_ID);
 	container_client.setRequestHandler(function(cmd,query,callback) {
 		console.log ('Handling api request in container: '+cmd);
 		handle_api_2(cmd,query,create_closer(null),function(resp) {
-			console.log(resp);
 			callback(resp);
 		});
 	});

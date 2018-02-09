@@ -65,6 +65,7 @@ function Container() {
 		//close all the others (because they might actually be defunct)
 		for (var id in m_active_polls_from_container) {
 			if (id!=poll_id) {
+				console.log ('Closing other poll from container.');
 				var poll0=m_active_polls_from_container[id];
 				poll0.callback({success:true,message:'not used *'});
 				poll0.callback=null; //make sure we don't call it again by accident
@@ -73,7 +74,7 @@ function Container() {
 		}
 
 		closer.on('close',function() {
-			console.log('Poll from container has been closed.');
+			console.log ('Poll from container has been closed.');
 			if (poll_id in m_active_polls_from_container)
 				delete m_active_polls_from_container[poll_id];
 		});
@@ -111,20 +112,18 @@ function Container() {
 	function wait_for_active_poll_from_container(msec,closer,callback) {
 		var need_to_cancel=false;
 		closer.on('close',function() {
-			console.log('Request closed while waiting for active poll from container.');
+			console.log ('Request closed while waiting for active poll from container.');
 			need_to_cancel=true;
 		});
 
 		wait_for_active_poll_from_container_2(new Date(),msec,closer,callback);
 		function wait_for_active_poll_from_container_2(start_timestamp,msec,closer,callback) {
-			console.log(':::::::::: wait_for_active_poll_from_container_2 ::::::::::');
 			var first_poll_id=null;
 			for (var pid in m_active_polls_from_container) {
 				first_poll_id=pid;
 				break;
 			}
 			if (first_poll_id) {
-				console.log('found poll!');
 				var poll=m_active_polls_from_container[first_poll_id];
 				delete m_active_polls_from_container[first_poll_id];
 				callback(poll);
@@ -132,17 +131,13 @@ function Container() {
 			else {
 				var elapsed=(new Date())-start_timestamp;
 				if (elapsed>msec) {
-					console.log('elapsed exceeds: '+elapsed+' > '+msec);
 					callback(null);
 					return;
 				}
 				if (need_to_cancel) {
-					console.log('need to cancel');
 					return;
 				}
-				console.log('aaa');
 				setTimeout(function() {
-					console.log('bbb');
 					wait_for_active_poll_from_container_2(start_timestamp,msec,closer,callback);
 				},100);
 			}
