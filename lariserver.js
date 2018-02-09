@@ -7,7 +7,7 @@
 //   DATA_DIRECTORY (use * for default)
 
 // If you want to listen
-//   LISTEN_PORT (e.g., 6057)
+//   LISTEN_PORT (e.g., 6057, or * for default)
 
 // To connect to a parent lari server
 //   PARENT_LARI_URL (optional)
@@ -59,12 +59,14 @@ if (CONFIG_DOC) {
 
 var express = require('express');
 
-process.env.LISTEN_PORT=process.env.LISTEN_PORT||process.env.PORT;
+if (process.env.LISTEN_PORT=='*') {
+	process.env.LISTEN_PORT=process.env.PORT||6057;
+}
 
 if (process.env.LISTEN_PORT) {
 	var app = express();
 
-	app.set('port', (process.env.LISTEN_PORT || 6057));
+	app.set('port', (process.env.LISTEN_PORT));
 
 	var lari_config=null;
 	var last_update_lari_config=0;
