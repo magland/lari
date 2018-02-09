@@ -2,7 +2,8 @@
 
 var LariClient=require(__dirname+'/lariclient.js').LariClient;
 var client=new LariClient();
-client.setLariServerUrl('http://localhost:6057');
+//client.setLariServerUrl('http://localhost:6057');
+client.setLariServerUrl('https://lari1.herokuapp.com');
 client.setContainerId('child');
 
 //test1();

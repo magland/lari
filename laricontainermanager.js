@@ -55,11 +55,23 @@ function Container() {
 
 	function handlePollFromContainer(query,closer,callback) {
 		var poll_id=make_random_id(10);
+
 		m_active_polls_from_container[poll_id]={
 			query:query,
 			callback:callback,
 			timestamp:new Date()
 		}
+
+		//close all the others (because they might actually be defunct)
+		for (var id in m_active_polls_from_container) {
+			if (id!=poll_id) {
+				var poll0=m_active_polls_from_container[id];
+				poll0.callback({success:true,message:'not used *'});
+				poll0.callback=null; //make sure we don't call it again by accident
+				delete m_active_polls_from_container[id];
+			}
+		}
+
 		closer.on('close',function() {
 			console.log('Poll from container has been closed.');
 			if (poll_id in m_active_polls_from_container)
