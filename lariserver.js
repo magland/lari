@@ -54,6 +54,8 @@ if (CONFIG_DOC) {
 
 var express = require('express');
 
+process.env.LISTEN_PORT=process.env.LISTEN_PORT||process.env.PORT;
+
 if (process.env.LISTEN_PORT) {
 	var app = express();
 
