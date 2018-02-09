@@ -283,6 +283,10 @@ function handle_api_2(cmd,query,closer,callback) {
 				callback('Error parsing JSON for command: '+exe);
 				return;
 			}
+			if (obj.name!=query.processor_name) {
+				callback('Error getting spec for '+query.processor_name);
+				return;
+			}
 			callback(null,{success:true,spec:obj});
 		});
 		closer.on('close',function() {
