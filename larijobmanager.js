@@ -30,7 +30,7 @@ function LariJobManager() {
 function LariProcessorJob() {
 	var that=this;
 
-	this.start=function(processor_name,inputs,outputs,parameters,resources,opts,callback) {start(processor_name,inputs,outputs,parameters,resources,opts,callback);};
+	this.start=function(processor_name,processor_version,inputs,outputs,parameters,resources,opts,callback) {start(processor_name,processor_version,inputs,outputs,parameters,resources,opts,callback);};
 	this.keepAlive=function() {m_alive_timer=new Date();};
 	this.cancel=function(callback) {cancel(callback);};
 	this.isComplete=function() {return m_is_complete;};
@@ -48,7 +48,7 @@ function LariProcessorJob() {
 	var m_latest_console_output='';
 
 	var request_fname,response_fname,mpreq;
-	function start(processor_name,inputs,outputs,parameters,resources,opts,callback) {
+	function start(processor_name,processor_version,inputs,outputs,parameters,resources,opts,callback) {
 		if (!process.env.DATA_DIRECTORY) {
 			callback('Environment variable not set: DATA_DIRECTORY');
 			return;
@@ -58,6 +58,7 @@ function LariProcessorJob() {
 		mpreq={
 			action:'queue_process',
 			processor_name:processor_name,
+			processor_version:processor_version,
 			inputs:inputs,
 			outputs:outputs,
 			parameters:parameters,

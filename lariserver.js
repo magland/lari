@@ -16,91 +16,150 @@
 //   DOCSTOR_URL (optional)
 //   CONFIG_DOC (optional)
 
+/*
+There are two types of lari servers.
+Type 1. Processing server (or container within a processing server)
+Type 2. A hub for accessing multiple (child) lari server
+
+For type 1, you can either listen on a port (LISTEN_PORT env var) or
+you can connect to a parent (hub) server via PARENT_LARI_URL
+
+For type 2, you must listen on a port LISTEN_PORT
+
+All lari servers should have a container_id (CONTAINER_ID env var)
+although this is really for child servers that connect in to a hub parent.
+
+For type 1 servers, ie that actually do processing, you must set the
+DATA_DIRECTORY environment variable. This is where all the actual
+intermediate and result files will be stored.
+
+For type 1 servers, you must also install mountainlab, and you should
+also install mountainlab-mpdock, and install the kbucket_upload ML package
+
+*/
+
+// All the environment variables in .env will be loaded
 require('dotenv').config(__dirname+'/.env');
 
+// CONTAINER_ID is required
 if (!process.env.CONTAINER_ID) {
 	console.warn('Environment variable not set: CONTAINER_ID.');
 	return;
 }
 
+// DATA_DIRECTORY is required for processing servers (type 1)
 if (process.env.DATA_DIRECTORY) {
 	if (process.env.DATA_DIRECTORY=='*') {
+		// By default it will be within the tmp directory configured via mlconfig
 		process.env.DATA_DIRECTORY=get_default_data_directory();
 	}
 	mkdir_if_needed(process.env.DATA_DIRECTORY);
 	console.log ('Using data directory: '+process.env.DATA_DIRECTORY);
 }
 
+// The LariJobManager will manage the queued, running, and finished processing jobs
 var LariJobManager=require(__dirname+'/larijobmanager.js').LariJobManager;
-var LariProcessorJob=require(__dirname+'/larijobmanager.js').LariProcessorJob;
-var execute_and_read_stdout=require(__dirname+'/larijobmanager.js').execute_and_read_stdout;
+// Here's the global job manager
 var JM=new LariJobManager();
 
-var LariContainerManager=require(__dirname+'/laricontainermanager.js').LariContainerManager;
-var container_manager=new LariContainerManager();
+// A processor job is a queued, running, or finished processing job
+var LariProcessorJob=require(__dirname+'/larijobmanager.js').LariProcessorJob;
 
+// Some utility functions
+var execute_and_read_stdout=require(__dirname+'/larijobmanager.js').execute_and_read_stdout;
 var lari_http_post_json=require(__dirname+'/lariclient.js').lari_http_post_json;
 
-var GoogleAuth = require('google-auth-library');
-var jwt = require('jsonwebtoken');
+// For hub servers (type 2), the LariContainerManager manage lari child containers
+// that have connected in
+var LariContainerManager=require(__dirname+'/laricontainermanager.js').LariContainerManager;
+// Here's the global container manager
+var container_manager=new LariContainerManager();
+
+// Not used at the moment
+// var GoogleAuth = require('google-auth-library');
+// var jwt = require('jsonwebtoken');
 DocStorClient = require(__dirname+'/docstorclient.js').DocStorClient;
 
-var DOCSTOR_URL=process.env.DOCSTOR_URL||'';
-var CONFIG_DOC=process.env.CONFIG_DOC||'';
+// LariProcessCache is used to cache processes that have already run
+var LariProcessCache=require(__dirname+'/lariprocesscache.js').LariProcessCache;
+// Here's the global process cache
+var process_cache=new LariProcessCache();
 
+// Not used for now
+//var DOCSTOR_URL=process.env.DOCSTOR_URL||'';
+//var CONFIG_DOC=process.env.CONFIG_DOC||'';
+/*
 if (CONFIG_DOC) {
 	if (!DOCSTOR_URL) {
 		console.error('Missing environment variable: DOCSTOR_URL');
 		return;
 	}
 }
+*/
 
 
 var express = require('express');
 
+// * means to set the default listen port (important for heroku, which assigns the port via the PORT env var)
 if (process.env.LISTEN_PORT=='*') {
 	process.env.LISTEN_PORT=process.env.PORT||6057;
 }
 
 if (process.env.LISTEN_PORT) {
+	// In this case we need to listen for http or https requests
 	var app = express();
 
 	app.set('port', (process.env.LISTEN_PORT));
 
+	// not used for now
+	/*
 	var lari_config=null;
 	var last_update_lari_config=0;
 	setTimeout(function() {
 		do_update_lari_config();
 	},100);
+	*/
 
 
 	app.use(function(req,resp,next) {
+		// A request has been received either from the client or from a child lari server
 		var url_parts = require('url').parse(req.url,true);
 		var host=url_parts.host;
 		var path=url_parts.pathname;
 		var query=url_parts.query;
 		if (path=='/api/spec') {
+			// Request the spec for a processor
 			handle_api('spec',req,resp);
 		}
 		else if (path=='/api/queue-process') {
+			// Start (or queue) a process
 			handle_api('queue-process',req,resp);
 		}
 		else if (path=='/api/probe-process') {
+			// Check on the state of a queued, running, or finished process
 			handle_api('probe-process',req,resp);
 		}
 		else if (path=='/api/cancel-process') {
+			// Cancel a queued or running process
 			handle_api('cancel-process',req,resp);
 		}
 		else if (path=='/api/find-file') {
+			// Check to see if a file is on the processing server (via prv-locate)
 			handle_api('find-file',req,resp);
 		}
 		else if (path=='/api/get-file-content') {
+			// Return the content of a relatively small text file on the server (found via prv-locate)
+			// (To access the content of larger output files, use kbucket.upload)
 			handle_api('get-file-content',req,resp);
 		}
 		else if (path=='/api/poll-from-container') {
+			// A child lari server (container) is sending a poll request
+			// This server will reply with requests from the client that need to be handled by the child
 			handle_api('poll-from-container',req,resp);
 		}
 		else if (path=='/api/responses-from-container') {
+			// A child lari server (container) is sending some responses
+			// These are responses to requests (initiated by the client) and returned in the poll-from-container above
 			handle_api('responses-from-container',req,resp);
 		}
 		else {
@@ -108,11 +167,13 @@ if (process.env.LISTEN_PORT) {
 		}
 	});
 
+	// Start listening
 	app.listen(app.get('port'), function() {
 	  console.log ('lari is running on port', app.get('port'));
 	});
 
 	function handle_api(cmd,REQ,RESP) {
+		// handle an api command from the client or child lari server
 		var url_parts = require('url').parse(REQ.url,true);
 		var host=url_parts.host;
 		var path=url_parts.pathname;
@@ -133,6 +194,7 @@ if (process.env.LISTEN_PORT) {
 			RESP.end();
 		}
 		else {
+			// We'll handle both GET and POST requests, and call handle_api_2 once the query has been parsed
 			if (REQ.method=='GET') {
 				handle_api_2(cmd,query,create_closer(REQ),function(resp) {
 					send_json_response(RESP,resp);
@@ -159,11 +221,13 @@ if (process.env.LISTEN_PORT) {
 }
 
 if (process.env.PARENT_LARI_URL) {
+	// In this case we are connecting to a parent (hub) lari server. We will send poll requests.
 	console.log ('Connecting to parent: '+process.env.PARENT_LARI_URL);
 	var container_client=new ContainerClient();
 	container_client.setLariUrl(process.env.PARENT_LARI_URL);
 	container_client.setContainerId(process.env.CONTAINER_ID);
 	container_client.setRequestHandler(function(cmd,query,callback) {
+		// Here we respond to api request from client that has been routed through the parent lari server
 		console.log ('Handling api request in container: '+cmd);
 		handle_api_2(cmd,query,create_closer(null),function(resp) {
 			callback(resp);
@@ -172,8 +236,70 @@ if (process.env.PARENT_LARI_URL) {
 	container_client.start();
 }
 
+var s_query_for_job_id={};
 function handle_api_2(cmd,query,closer,callback) {
+	// Handle an api request from either the client or a child lari server
+	if (cmd=='queue-process') {
+		// start or queue a process
+		process_cache.getCachedResponse(query,function(resp) {
+			if (resp) {
+				callback(resp);
+				return;
+			}
+			handle_api_3(cmd,query,closer,function(resp) {
+				handle_probe_response(query,resp);
+			});
+		});
+	}
+	else if (cmd=='probe-process') {
+		// check that status of an existing process (queued, running, or finished)
+		handle_api_3(cmd,query,closer,function(resp) {
+			handle_probe_response(null,resp);
+		});
+	}
+	else {
+		// the other api commands are handled in handle_api_3
+		handle_api_3(cmd,query,closer,callback);
+	}
+
+	function handle_probe_response(query_or_null,resp) {
+		if (!resp.success) {
+			//not successful, just return as usual
+			callback(resp);
+			return;
+		}
+
+		// the query will be associated with the job id
+		var query=query_or_null;
+		if (query) {
+			s_query_for_job_id[resp.job_id]=query;
+		}
+		else {
+			query=s_query_for_job_id[resp.job_id]||null;
+		}
+
+		if (!query) {
+			// no query, just return as usual (should not happen)
+			callback(resp);
+			return;
+		}
+		if ((resp.complete)&&(resp.result.success)) {
+			// we have success. Let's cache it!
+			process_cache.setCachedResponse(query,resp,function() {
+				callback(resp);
+			});
+		}
+		else {
+			//not complete or not successful, just return as usual
+			callback(resp);
+		}
+	}
+}
+
+function handle_api_3(cmd,query,closer,callback) {
+	// Handle an api request from either the client or a child lari server (except for those handled above by handle_api_2)
 	if (cmd=='poll-from-container') {
+		// The child lari server (ie container) has sent a poll http request. We will respond with routed requests from the client.
 		var debug_code=lari_make_random_id(5);
 		container_manager.handlePollFromContainer(query,closer,function(resp) {
 			callback(resp);
@@ -181,19 +307,25 @@ function handle_api_2(cmd,query,closer,callback) {
 		return;
 	}
 	if (cmd=='responses-from-container') {
+		// The child lari server has sent responses to requests that we previously sent in replies to poll-from-container
 		container_manager.handleResponsesFromContainer(query,closer,function(resp) {
 			callback(resp);
 		});
 		return;
 	}
 
+	// If the container_id of the query matches this container, then we proceed.
+	// Otherwise, we need to route the request to the approriate child lari server
 	if (query.container_id!=process.env.CONTAINER_ID) {
 		container_manager.handleApiRequest(cmd,query,closer,function(resp) {
 			callback(resp);
 		});
 		return;
 	}
+
+
 	if (cmd=='spec') {
+		// The client wants the spec of a processor
 		spec(query,closer,function(err,resp) {
 			if (err) {
 				callback({success:false,error:err});
@@ -204,6 +336,7 @@ function handle_api_2(cmd,query,closer,callback) {
 		});
 	}
 	else if (cmd=='queue-process') {
+		// The client wants to queue a process (oops I think this is redundant)
 		queue_process(query,closer,function(err,resp) {
 			if (err) {
 				callback({success:false,error:err});
@@ -214,6 +347,7 @@ function handle_api_2(cmd,query,closer,callback) {
 		});
 	}
 	else if (cmd=='probe-process') {
+		// The client wants to check on an existing process (oops I think this is redundant)
 		probe_job(query,function(err,resp) {
 			if (err) {
 				callback({success:false,error:err});
@@ -224,6 +358,7 @@ function handle_api_2(cmd,query,closer,callback) {
 		});
 	}
 	else if (cmd=='cancel-process') {
+		// The client wants to cancel an existing process (oops I think this is redundant)
 		cancel_job(query,function(err,resp) {
 			if (err) {
 				callback({success:false,error:err});
@@ -234,6 +369,7 @@ function handle_api_2(cmd,query,closer,callback) {
 		});
 	}
 	else if (cmd=='find-file') {
+		// The client wants to check whether a particular file is on the server (identified via prv object)
 		find_file(query,closer,function(err,resp) {
 			if (err) {
 				callback({success:false,error:err});
@@ -244,6 +380,7 @@ function handle_api_2(cmd,query,closer,callback) {
 		});
 	}
 	else if (cmd=='get-file-content') {
+		// The client wants the content of a rel small text output file
 		get_file_content(query,closer,function(err,resp) {
 			if (err) {
 				callback({success:false,error:err});
@@ -254,6 +391,7 @@ function handle_api_2(cmd,query,closer,callback) {
 		});
 	}
 	else {
+		// The command is not supported
 		callback({success:false,error:'Unsupported command: '+cmd});	
 	}
 
@@ -369,18 +507,19 @@ function handle_api_2(cmd,query,closer,callback) {
 	}
 	function queue_process(query,closer,callback) {
 		var processor_name=query.processor_name||'';
+		var processor_version=query.processor_version||'';
 		var inputs=query.inputs||{};
 		var outputs=query.outputs||{};
 		var parameters=query.parameters||{};
 		var resources=query.resources||{};
 		var opts=query.opts||{};
 		if ('process_id' in query) {
-			callback('process_id parameter is not allowed in queue-process.');
+			callback('process_id parameter is not allowed in queue-process.'); //used to be
 			return;
 		}
 		var job_id=lari_make_random_id(10);
 		var Jnew=new LariProcessorJob();
-		Jnew.start(processor_name,inputs,outputs,parameters,resources,opts,function(err,tmp) {
+		Jnew.start(processor_name,processor_version,inputs,outputs,parameters,resources,opts,function(err,tmp) {
 			if (err) {
 				callback(err);
 				return;
@@ -582,6 +721,7 @@ function receive_json_post(REQ,callback_in) {
 	});
 }
 
+//not used for now
 function do_update_lari_config_if_needed(callback) {
 	var elapsed=(new Date())-last_update_lari_config;
 	if (elapsed>5000) {
@@ -592,6 +732,7 @@ function do_update_lari_config_if_needed(callback) {
 	}
 }
 
+//not used for now
 function do_update_lari_config(callback) {
 	do_update_lari_config_2(function(err,obj) {
 		last_update_lari_config=new Date();
@@ -610,6 +751,7 @@ function do_update_lari_config(callback) {
 	});
 }
 
+// not used for now
 function do_update_lari_config_2(callback) {
 	if (!CONFIG_DOC) {
 		callback(null,{});
