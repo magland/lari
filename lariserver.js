@@ -85,6 +85,8 @@ var LariProcessCache=require(__dirname+'/lariprocesscache.js').LariProcessCache;
 // Here's the global process cache
 var process_cache=new LariProcessCache();
 
+var process_caching_enabled=false;
+
 // Not used for now
 //var DOCSTOR_URL=process.env.DOCSTOR_URL||'';
 //var CONFIG_DOC=process.env.CONFIG_DOC||'';
@@ -241,15 +243,22 @@ function handle_api_2(cmd,query,closer,callback) {
 	// Handle an api request from either the client or a child lari server
 	if (cmd=='queue-process') {
 		// start or queue a process
-		process_cache.getCachedResponse(query,function(resp) {
-			if (resp) {
-				callback(resp);
-				return;
-			}
+		if (process_caching_enabled) {
+			process_cache.getCachedResponse(query,function(resp) {
+				if (resp) {
+					callback(resp);
+					return;
+				}
+				handle_api_3(cmd,query,closer,function(resp) {
+					handle_probe_response(query,resp);
+				});
+			});
+		}
+		else {
 			handle_api_3(cmd,query,closer,function(resp) {
 				handle_probe_response(query,resp);
 			});
-		});
+		}
 	}
 	else if (cmd=='probe-process') {
 		// check that status of an existing process (queued, running, or finished)
@@ -285,9 +294,14 @@ function handle_api_2(cmd,query,closer,callback) {
 		}
 		if ((resp.complete)&&(resp.result.success)) {
 			// we have success. Let's cache it!
-			process_cache.setCachedResponse(query,resp,function() {
+			if (process_caching_enabled) {
+				process_cache.setCachedResponse(query,resp,function() {
+					callback(resp);
+				});
+			}
+			else {
 				callback(resp);
-			});
+			}
 		}
 		else {
 			//not complete or not successful, just return as usual
@@ -336,7 +350,7 @@ function handle_api_3(cmd,query,closer,callback) {
 		});
 	}
 	else if (cmd=='queue-process') {
-		// The client wants to queue a process (oops I think this is redundant)
+		// The client wants to queue a process
 		queue_process(query,closer,function(err,resp) {
 			if (err) {
 				callback({success:false,error:err});
@@ -347,7 +361,7 @@ function handle_api_3(cmd,query,closer,callback) {
 		});
 	}
 	else if (cmd=='probe-process') {
-		// The client wants to check on an existing process (oops I think this is redundant)
+		// The client wants to check on an existing process
 		probe_job(query,function(err,resp) {
 			if (err) {
 				callback({success:false,error:err});
@@ -358,7 +372,7 @@ function handle_api_3(cmd,query,closer,callback) {
 		});
 	}
 	else if (cmd=='cancel-process') {
-		// The client wants to cancel an existing process (oops I think this is redundant)
+		// The client wants to cancel an existing process
 		cancel_job(query,function(err,resp) {
 			if (err) {
 				callback({success:false,error:err});
