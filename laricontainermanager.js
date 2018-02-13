@@ -81,7 +81,7 @@ function Container() {
 	}
 
 	function handleApiRequest(cmd,query,closer,callback) {
-		wait_for_active_poll_from_container(5*1000,closer,function(poll) {
+		wait_for_active_poll_from_container(10*1000,closer,function(poll) {
 			if (!poll) {
 				callback({success:false,error:'Error waiting for active poll from container '+query.container_id});
 				return;

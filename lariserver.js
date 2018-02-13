@@ -267,11 +267,22 @@ function ContainerClient() {
 			return;
 		}
 		m_request_handler(req.cmd,req.query,function(resp) {
-			send_response_to_request_from_server(request_id,resp);
+			send_response_to_request_from_server(request_id,resp,function(err) {
+				if (err) {
+					console.error(err+' (trying again in 10 seconds)');
+					setTimeout(function() {
+						send_response_to_request_from_server(request_id,resp,function(err2) {
+							if (err2) {
+								console.error(err2+' (failed on second try)');
+							}
+						}
+					},10*1000);
+				}
+			});
 		});
 	}
 
-	function send_response_to_request_from_server(request_id,resp) {
+	function send_response_to_request_from_server(request_id,resp,callback) {
 		var responses=[];
 		responses.push({
 			request_id:request_id,
@@ -280,13 +291,14 @@ function ContainerClient() {
 		var url=m_url+'/api/responses-from-container';
 		lari_http_post_json(url,{responses:responses,container_id:m_container_id},{},function(err0,resp0) {
 			if (err0) {
-				console.error('Error sending responses to lari server: '+err0);
+				callback('Error sending responses to lari server: '+err0);
 				return;
 			}
 			if (!resp0.success) {
-				console.error('Error in sending responses to lari server: '+resp.error);
+				callback('Error in sending responses to lari server: '+resp.error);
 				return;
 			}
+			callback(null);
 		});	
 	}
 
