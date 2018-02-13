@@ -227,7 +227,8 @@ function handle_api_3(cmd,query,closer,callback) {
 				callback(err);
 				return;
 			}
-			console.log ('Output of process: ['+stdout.length+' bytes]');
+			//console.log ('Output of process: ['+stdout.length+' bytes]');
+			console.log(stdout.length);
 			if (stdout[0]=='p')
 				stdout=stdout.split('\n').slice(1).join('\n');
 			var obj=try_parse_json(stdout);
