@@ -18,8 +18,13 @@ var JM=new LariJobManager();
 var LariProcessCache=require(__dirname+'/lariprocesscache.js').LariProcessCache;
 // Here's the global process cache
 var process_cache=new LariProcessCache();
-
-var process_caching_enabled=false;
+var process_caching_enabled=(process.env.LARI_PROCESS_CACHE=='ON');
+if (process_caching_enabled) {
+	console.log ('Process cache enabled');
+}
+else {
+	console.log ('Process cache not enabled');
+}
 
 // utility
 var execute_and_read_stdout=require(__dirname+'/larijobmanager.js').execute_and_read_stdout;

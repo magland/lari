@@ -41,12 +41,25 @@ function LariProcessCache() {
 		var obj={};
 		obj.processor_name=query.processor_name;
 		obj.processor_version=query.processor_version;
-		obj.inputs=query.inputs;
-		obj.outputs=query.outputs;
+		obj.inputs=prv2checksum(query.inputs);
+		obj.outputs=prv2checksum(query.outputs);
 		obj.parameters=query.parameters;
 		obj.package_uri=(query.opts||{}).package_uri||'';
 		var code=sha1(JSON.stringify(obj));
 		return code;
+	}
+
+	function prv2checksum(obj) {
+		if (!obj) return obj;
+		if (typeof(obj)!='object') return obj;
+		if ('original_checksum' in obj) {
+			return obj.original_checksum;
+		}
+		var ret={};
+		for (var key in obj) {
+			ret[key]=prv2checksum(obj[key]);
+		}
+		return ret;
 	}
 
 	function clone(obj) {

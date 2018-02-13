@@ -12,6 +12,9 @@
 // To connect to a parent lari server
 //   PARENT_LARI_URL (optional)
 
+// To turn on process caching:
+//   LARI_PROCESS_CACHE=ON
+
 // Not used yet
 //   DOCSTOR_URL (optional)
 //   CONFIG_DOC (optional)
@@ -275,7 +278,7 @@ function ContainerClient() {
 							if (err2) {
 								console.error(err2+' (failed on second try)');
 							}
-						}
+						});
 					},10*1000);
 				}
 			});
