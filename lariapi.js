@@ -238,7 +238,7 @@ function handle_api_3(cmd,query,closer,callback) {
 				return;
 			}
 			if (obj.name!=query.processor_name) {
-				callback('Error getting spec for '+query.processor_name);
+				callback('Error getting spec for '+query.processor_name+': '+obj.name+' <> '+query.processor_name);
 				return;
 			}
 			callback(null,{success:true,spec:obj});
