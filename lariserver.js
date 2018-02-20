@@ -195,6 +195,8 @@ if (process.env.PARENT_LARI_URL) {
 	if (!process.env.CONTAINER_ID) {
 		console.warn('Environment variable not set: CONTAINER_ID.');
 		return;
+	} else {
+		console.log ('Container ID: '+process.env.CONTAINER_ID);
 	}
 
 	console.log ('Connecting to parent: '+process.env.PARENT_LARI_URL);
