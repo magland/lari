@@ -42,7 +42,7 @@ also install mountainlab-mpdock, and install the kbucket_upload ML package
 
 // All the environment variables in .env will be loaded
 require('dotenv').config(__dirname+'/.env');
-require('os')
+require('os');
 
 if (process.env.CONTAINER_ID) {
 	if (process.env.CONTAINER_ID == "stream-auto") {
