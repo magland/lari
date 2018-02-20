@@ -42,7 +42,14 @@ also install mountainlab-mpdock, and install the kbucket_upload ML package
 
 // All the environment variables in .env will be loaded
 require('dotenv').config(__dirname+'/.env');
+const os = require('os');
 
+if (process.env.CONTAINER_ID) {
+	if (process.env.CONTAINER_ID == "stream-auto") {
+		process.env.CONTAINER_ID = os.hostname();
+	}
+}
+		
 
 // Some utility functions
 var lari_http_post_json=require(__dirname+'/lariclient.js').lari_http_post_json;
@@ -195,6 +202,8 @@ if (process.env.PARENT_LARI_URL) {
 	if (!process.env.CONTAINER_ID) {
 		console.warn('Environment variable not set: CONTAINER_ID.');
 		return;
+	} else {
+		console.log ('Container ID: '+process.env.CONTAINER_ID);
 	}
 
 	console.log ('Connecting to parent: '+process.env.PARENT_LARI_URL);
