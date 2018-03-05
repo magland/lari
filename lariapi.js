@@ -1,4 +1,3 @@
-
 exports.directCall=function(cmd,query,closer,callback) {handle_api_2(cmd,query,closer,callback);};
 
 exports.handle_api_2=handle_api_2;
@@ -13,6 +12,8 @@ var container_manager=new LariContainerManager();
 var LariJobManager=require(__dirname+'/larijobmanager.js').LariJobManager;
 // Here's the global job manager
 var JM=new LariJobManager();
+
+var stats = require(__dirname+'/container-stats.js')
 
 // LariProcessCache is used to cache processes that have already run
 var LariProcessCache=require(__dirname+'/lariprocesscache.js').LariProcessCache;
@@ -209,6 +210,17 @@ function handle_api_3(cmd,query,closer,callback) {
 			}
 		});
 	}
+    else if (cmd=='get-stats') {
+        // The client wants to know the resources available on the server
+        get_stats(query,closer,function(err,resp) {
+			if (err) {
+				callback({success:false,error:err});
+			}
+			else {
+				callback(resp);
+			}
+        });
+    }
 	else {
 		// The command is not supported
 		callback({success:false,error:'Unsupported command: '+cmd});	
@@ -326,6 +338,15 @@ function handle_api_3(cmd,query,closer,callback) {
 			return '';
 		}
 	}
+    function get_stats(query,closer,callback) {
+        console.log("Getting stats");
+        try {
+           callback(null, {success:true,content:stats.cpuUsage()});
+        }
+        catch(err) {
+           callback(err);
+        }
+    }
 	function queue_process(query,closer,callback) {
 		var processor_name=query.processor_name||'';
 		var processor_version=query.processor_version||'';

@@ -16,7 +16,8 @@ function LariClient() {
 	this.cancelProcess=function(job_id,opts,callback) {cancelProcess(job_id,opts,callback);};
 	this.findFile=function(prv,opts,callback) {findFile(prv,opts,callback);};
 	this.getFileContent=function(prv,opts,callback) {getFileContent(prv,opts,callback);};
-	this.clearSpecCache=function() {m_spec_cache={};};
+	this.getStats=function(opts,callback) {getStats(opts, callback);};
+    this.clearSpecCache=function() {m_spec_cache={};};
 	this.setDirectLariCall=function(func) {m_direct_lari_call=func;};
 
 	var m_lari_server_url='';
@@ -94,6 +95,16 @@ function LariClient() {
 			callback(null,resp);
 		});
 	}
+
+    function getStats(opts,callback) {
+        api_call('get-stats',{},function(err,resp) {
+            if (err) {
+                callback(err);
+                return;
+            }
+            callback(null,resp)
+        });
+    }
 
 	function api_call(cmd,query,opts,callback) {
 		if (!m_lari_server_url) {

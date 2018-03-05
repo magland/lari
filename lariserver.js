@@ -94,11 +94,12 @@ if (process.env.LISTEN_PORT) {
 		do_update_lari_config();
 	},100);
 	*/
-
+    app.get('/', (req, res) => res.send('This is a parent Lari Server.'));
 
 	app.use(function(req,resp,next) {
 		// A request has been received either from the client or from a child lari server
-		var url_parts = require('url').parse(req.url,true);
+		console.log("API 1");
+        var url_parts = require('url').parse(req.url,true);
 		var host=url_parts.host;
 		var path=url_parts.pathname;
 		var query=url_parts.query;
@@ -127,7 +128,7 @@ if (process.env.LISTEN_PORT) {
 			// (To access the content of larger output files, use kbucket.upload)
 			handle_api('get-file-content',req,resp);
 		}
-		else if (path=='/api/poll-from-container') {
+        else if (path=='/api/poll-from-container') {
 			// A child lari server (container) is sending a poll request
 			// This server will reply with requests from the client that need to be handled by the child
 			handle_api('poll-from-container',req,resp);
@@ -137,15 +138,22 @@ if (process.env.LISTEN_PORT) {
 			// These are responses to requests (initiated by the client) and returned in the poll-from-container above
 			handle_api('responses-from-container',req,resp);
 		}
+        else if (path=='/api/get-stats',req,resp) {
+            // Get cpu and memory statistics on the child server
+            handle_api('get-stats', req, resp);
+        }
+
 		else {
 			next();
 		}
 	});
 
 	// Start listening
-	app.listen(app.get('port'), function() {
+	app.listen(app.get('port'), '0.0.0.0', function() {
 	  console.log ('lari is running on port', app.get('port'));
+      console.log ('from 0.0.0.0');
 	});
+    
 
 	function handle_api(cmd,REQ,RESP) {
 		// handle an api command from the client or child lari server
@@ -153,6 +161,8 @@ if (process.env.LISTEN_PORT) {
 		var host=url_parts.host;
 		var path=url_parts.pathname;
 		var query=url_parts.query;
+        
+        console.log("Request recieved.")
 
 		if (REQ.method == 'OPTIONS') {
 			var headers = {};
