@@ -1,0 +1,65 @@
+# Set the base image to Ubuntu
+FROM ubuntu:xenial
+
+MAINTAINER Jeremy Magland
+
+RUN apt-get update
+
+RUN apt-get update && apt-get install -y software-properties-common
+
+## # Do not cache starting from here if using --build_arg build_date="$date"
+# ARG build_date=unknown
+# RUN build_date=${build_date} && echo "build_date=$build_date"
+
+# Install Mountainlab
+RUN add-apt-repository -y ppa:magland/mountainlab
+RUN apt-get update && apt-get install -y mountainlab
+RUN apt-get update && apt-get install -y mountainsort
+RUN apt-get update && apt-get install -y mountainlab-mpdock
+RUN apt-get update && apt-get install -y python3-pip
+
+# Test MountainLab
+RUN mp-list-processors
+
+# Install things needed for server-client comm
+RUN apt-get update && apt-get install -y npm nodejs nodejs-legacy
+RUN apt-get update && apt-get install -y git
+
+# Install KBucket
+WORKDIR /opt/mountainlab/packages/
+RUN git clone https://github.com/magland/kbucket_upload
+WORKDIR /opt/mountainlab/packages/kbucket_upload/
+RUN echo "#KBUCKET_URL=http://localhost:5031" >> .env
+RUN echo "KBUCKET_URL=https://kbucket.flatironinstitute.org" >> .env
+RUN echo "KBUCKET_UPLOAD_AUTH=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtYXhfc2l6ZV9tYiI6IkluZmluaXR5IiwidGFzayI6InVwbG9hZCIsImlhdCI6MTUxNTc4ODU0OCwiZXhwIjoxODc1Nzg4NTQ4fQ.FL0PKfOXtYFDEwWsXzh0f6PEfoirKOqZ_y1TZlgi39w" >> .env
+RUN npm install
+
+# Install Lari
+# Set the following environment variables:
+##   CONTAINER_ID (required)
+ENV CONTAINER_ID stream-auto
+
+# If you want this to be a processing server (must have mountainlab installed)
+##   DATA_DIRECTORY (use * for default)
+ENV DATA_DIRECTORY *
+
+# If you want to listen (mainly for Parent Lari)
+##   LISTEN_PORT (e.g., 6057, or * for default)
+
+# To connect to a parent lari server
+##  PARENT_LARI_URL (optional)
+ENV PARENT_LARI_URL https://lari1.herokuapp.com
+
+# Not used yet
+##   DOCSTOR_URL (optional)
+##   CONFIG_DOC (optional)
+
+RUN apt-get update && apt-get install -y vim
+WORKDIR /work2
+RUN echo ""
+RUN git clone https://github.com/alexmorley/lari.git
+WORKDIR /work2/lari
+RUN git checkout stats
+RUN npm install
+
+CMD ["/usr/bin/npm", "start"]

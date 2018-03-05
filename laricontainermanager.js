@@ -24,6 +24,7 @@ function LariContainerManager() {
 			return;
 		}
 		if (!(id in m_containers)) {
+            console.log("Adding ID to container list");
 			m_containers[id]=new Container();
 		}
 		var C=m_containers[id];
