@@ -1,11 +1,11 @@
 # lari
 
-# lariserver.js
-## Main Function
+# lariserver.js (Entrypoint)
 
 
-## lariapi.js
-### Requires:
+## lariapi.js (handle_api2)
+Requires:
+
 - laricontainermanager.js
 - lariprocesscache.js
 - docstorclient.js   
