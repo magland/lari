@@ -14,6 +14,7 @@ var LariJobManager=require(__dirname+'/larijobmanager.js').LariJobManager;
 var JM=new LariJobManager();
 
 var stats = require(__dirname+'/container-stats.js')
+//var os    = require('os');
 
 // LariProcessCache is used to cache processes that have already run
 var LariProcessCache=require(__dirname+'/lariprocesscache.js').LariProcessCache;
@@ -341,7 +342,13 @@ function handle_api_3(cmd,query,closer,callback) {
     function get_stats(query,closer,callback) {
         console.log("Getting stats");
         try {
-           callback(null, {success:true,content:stats.cpuUsage()});
+           callback(null, {success:true,content:{
+               "Free Memory": stats.freemem(),
+               "Platform"   : stats.platform(),
+               "CPU Usage (1 min load)"   : stats.loadavg(1),
+               "CPU Usage (15 min load)"   : stats.loadavg(15)
+           }
+           });
         }
         catch(err) {
            callback(err);
