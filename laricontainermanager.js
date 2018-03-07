@@ -4,6 +4,7 @@ function LariContainerManager() {
 	this.handleApiRequest=function(cmd,query,closer,callback) {handleApiRequest(cmd,query,closer,callback);};
 	this.handlePollFromContainer=function(query,closer,callback) {handlePollFromContainer(query,closer,callback);};
 	this.handleResponsesFromContainer=function(query,closer,callback) {handleResponsesFromContainer(query,closer,callback);};
+	this.availableContainers=function() {return availableContainers();};
 
 	var m_containers={};
 
@@ -43,6 +44,14 @@ function LariContainerManager() {
 		}
 		var C=m_containers[id];
 		C.handleResponsesFromContainer(query,closer,callback);
+	}
+
+	function availableContainers() {
+		var ret={};
+		for (var id in m_containers) {
+			ret[id]={};
+		}
+		return ret;
 	}
 }
 

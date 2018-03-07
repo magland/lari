@@ -134,6 +134,11 @@ function handle_api_3(cmd,query,closer,callback) {
 		});
 		return;
 	}
+	if (cmd=='get-available-containers') {
+		var available_containers=container_manager.availableContainers();
+		callback({success:true,containers:available_containers});
+		return;
+	}
 
 	// If the container_id of the query matches this container, then we proceed.
 	// Otherwise, we need to route the request to the approriate child lari server
