@@ -345,7 +345,6 @@ function handle_api_3(cmd,query,closer,callback) {
 		}
 	}
     function get_stats(query,closer,callback) {
-        console.log("Getting stats");
         try {
            callback(null, {success:true,content:{
                "Free Memory": stats.freemem(),

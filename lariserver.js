@@ -98,7 +98,6 @@ if (process.env.LISTEN_PORT) {
 
 	app.use(function(req,resp,next) {
 		// A request has been received either from the client or from a child lari server
-		console.log("API 1");
         var url_parts = require('url').parse(req.url,true);
 		var host=url_parts.host;
 		var path=url_parts.pathname;
@@ -138,11 +137,14 @@ if (process.env.LISTEN_PORT) {
 			// These are responses to requests (initiated by the client) and returned in the poll-from-container above
 			handle_api('responses-from-container',req,resp);
 		}
-        else if (path=='/api/get-stats',req,resp) {
+        else if (path=='/api/get-stats') {
             // Get cpu and memory statistics on the child server
             handle_api('get-stats', req, resp);
         }
-
+        else if (path=='/api/get-available-containers') {
+            // Get the available containers (i.e., child lari servers, ie, processing servers)
+            handle_api('get-available-containers', req, resp);
+        }
 		else {
 			next();
 		}
@@ -161,8 +163,6 @@ if (process.env.LISTEN_PORT) {
 		var host=url_parts.host;
 		var path=url_parts.pathname;
 		var query=url_parts.query;
-        
-        console.log("Request recieved.")
 
 		if (REQ.method == 'OPTIONS') {
 			var headers = {};
