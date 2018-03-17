@@ -16,7 +16,7 @@ spec:
       terminationGracePeriodSeconds: 10
       containers:
       - name: proc-lari
-      image: alexmorley/spike-sort:proc_and_lari
+      image: alexmorley/proc_and_lari:v0.3
         imagePullPolicy: Always
         resources:
           requests:
