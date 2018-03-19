@@ -55,11 +55,9 @@ ENV PARENT_LARI_URL https://lari1.herokuapp.com
 ##   CONFIG_DOC (optional)
 
 RUN apt-get update && apt-get install -y vim
-WORKDIR /work2
-RUN echo ""
-RUN git clone https://github.com/alexmorley/lari.git
-WORKDIR /work2/lari
-RUN git checkout stats
+WORKDIR /work/lari
+ADD / ./ 
+# RUN git clone https://github.com/alexmorley/lari.git
 RUN npm install
 
 CMD ["/usr/bin/npm", "start"]

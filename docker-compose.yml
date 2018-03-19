@@ -1,0 +1,6 @@
+version: "2"
+services:
+    proc_and_lari: 
+      image: alexmorley/spike-sort:proc_and_lari
+      container_name: proc_and_lari
+

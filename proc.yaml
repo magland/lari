@@ -1,0 +1,27 @@
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+    name: stream
+spec:
+  selector:
+    matchLabels:
+      app: proc_and_lari # has to match .spec.template.metadata.labels
+  serviceName: stream
+  replicas: 3 # by default is 1
+  template:
+    metadata:
+      labels:
+        app: proc_and_lari # has to match .spec.selector.matchLabels
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: proc-lari
+      image: alexmorley/proc_and_lari:v0.3
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "1.5G"
+            cpu: "500m"
+          limits:
+            memory: "3G"
+            cpu: "800m"

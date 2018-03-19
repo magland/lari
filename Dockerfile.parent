@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y nodejs
 # Install Lari
 # Set the following environment variables:
 ##   CONTAINER_ID (required)
-ENV CONTAINER_ID parent
+## ENV CONTAINER_ID parent
 
 # Port to listen on (for Parent Lari) # use * for default
 ENV LISTEN_PORT 6057 
@@ -24,10 +24,7 @@ ENV LISTEN_PORT 6057
 ##   CONFIG_DOC (optional)
 ARG CACHE_DATE=2018-03-04:6
 
-WORKDIR /work
-RUN echo ""
-RUN git clone https://github.com/alexmorley/lari.git
 WORKDIR /work/lari
-RUN git checkout stats
+ADD / ./
 RUN npm install
 CMD ["/usr/bin/npm", "start"]

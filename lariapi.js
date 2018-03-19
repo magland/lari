@@ -347,10 +347,12 @@ function handle_api_3(cmd,query,closer,callback) {
     function get_stats(query,closer,callback) {
         try {
            callback(null, {success:true,content:{
-               "Free Memory": stats.freemem(),
-               "Platform"   : stats.platform(),
-               "CPU Usage (1 min load)"   : stats.loadavg(1),
-               "CPU Usage (15 min load)"   : stats.loadavg(15)
+               "FreeMemory"     : stats.freemem(),
+               "FreeMemoryPer"  : stats.freememPercentage(),
+               "TotalMemory"    : stats.totalmem(),
+               "CPU1"           : stats.loadavg(1),
+               "CPU15"          : stats.loadavg(15),
+               "Platform"       : stats.platform() 
            }
            });
         }
